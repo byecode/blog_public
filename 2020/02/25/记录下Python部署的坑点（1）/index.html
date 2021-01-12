@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>记录下Python部署的坑点（1） | 不已</title>
+  <meta name="description" content="题记 上回说到，django作为我们的后台框架，承载着整体的业务功能。通过其完善 &amp; 强大的后台支持，我们可以在很短的时间内得到想要的一系列，不过作为一个新手，遇到坑也是难免的，本文记录萌新遇到的常见问题  坑点一 数据库指令问题 第一个坑点：通过管理工具创建的数据库指令，对于PK键不会生效，也就是我们插入的自增主键是不会有这个属性的，需要到mysql后台修改。  坑点二 Debug开关问">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记录下Python部署的坑点（1）">
+<meta property="og:url" content="https://zyw.io/2020/02/25/%E8%AE%B0%E5%BD%95%E4%B8%8BPython%E9%83%A8%E7%BD%B2%E7%9A%84%E5%9D%91%E7%82%B9%EF%BC%881%EF%BC%89/index.html">
+<meta property="og:site_name" content="不已">
+<meta property="og:description" content="题记 上回说到，django作为我们的后台框架，承载着整体的业务功能。通过其完善 &amp; 强大的后台支持，我们可以在很短的时间内得到想要的一系列，不过作为一个新手，遇到坑也是难免的，本文记录萌新遇到的常见问题  坑点一 数据库指令问题 第一个坑点：通过管理工具创建的数据库指令，对于PK键不会生效，也就是我们插入的自增主键是不会有这个属性的，需要到mysql后台修改。  坑点二 Debug开关问">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://zyw.io/images/2020/02/25/a11326f0-57dc-11ea-aacb-699ec20e0eca.png">
+<meta property="article:published_time" content="2020-02-25T14:51:09.000Z">
+<meta property="article:modified_time" content="2021-01-12T13:20:50.456Z">
+<meta property="article:author" content="zyw">
+<meta property="article:tag" content="python">
+<meta property="article:tag" content="django">
+<meta property="article:tag" content="celery">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://zyw.io/images/2020/02/25/a11326f0-57dc-11ea-aacb-699ec20e0eca.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://zyw.io/2020/02/25/%E8%AE%B0%E5%BD%95%E4%B8%8BPython%E9%83%A8%E7%BD%B2%E7%9A%84%E5%9D%91%E7%82%B9%EF%BC%881%EF%BC%89/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/byecode" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Mr.喂</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android &amp; Backend &amp; Fullstack Developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/byecode" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/xdart" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="/" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">公告</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流~</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/android/">android</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/python/">python</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%BF%83%E6%83%85/">心情</a><span class="category-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AOP/" rel="tag">AOP</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binder/" rel="tag">Binder</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IPC/" rel="tag">IPC</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/celery/" rel="tag">celery</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/copyright/" rel="tag">copyright</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/django/" rel="tag">django</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ffdjango/" rel="tag">ffdjango</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ffmpeg/" rel="tag">ffmpeg</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gradle/" rel="tag">gradle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tramsform/" rel="tag">tramsform</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%9B%BE%E5%BA%8A/" rel="tag">图床</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BB%84%E4%BB%B6%E5%8C%96/" rel="tag">组件化</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%BD%AC%E7%A0%81/" rel="tag">转码</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/AOP/" style="font-size: 13.33px;">AOP</a> <a href="/tags/Binder/" style="font-size: 13px;">Binder</a> <a href="/tags/IPC/" style="font-size: 13px;">IPC</a> <a href="/tags/android/" style="font-size: 13.33px;">android</a> <a href="/tags/celery/" style="font-size: 13px;">celery</a> <a href="/tags/copyright/" style="font-size: 13px;">copyright</a> <a href="/tags/django/" style="font-size: 13.33px;">django</a> <a href="/tags/ffdjango/" style="font-size: 13px;">ffdjango</a> <a href="/tags/ffmpeg/" style="font-size: 13.67px;">ffmpeg</a> <a href="/tags/gradle/" style="font-size: 13px;">gradle</a> <a href="/tags/python/" style="font-size: 14px;">python</a> <a href="/tags/tramsform/" style="font-size: 13.33px;">tramsform</a> <a href="/tags/%E5%9B%BE%E5%BA%8A/" style="font-size: 13px;">图床</a> <a href="/tags/%E7%BB%84%E4%BB%B6%E5%8C%96/" style="font-size: 13.33px;">组件化</a> <a href="/tags/%E8%BD%AC%E7%A0%81/" style="font-size: 13px;">转码</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">三月 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">二月 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/%E5%BF%83%E6%83%85/">心情</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/03/24/why_support_copyright/" class="title">为什么要支持正版？</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-03-24T09:05:34.000Z" itemprop="datePublished">2020-03-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/python/">python</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/03/03/ffdjango%E6%96%B0%E5%8A%9F%E8%83%BDget-%E7%9B%B4%E6%92%AD%E6%8E%A8%E6%B5%81/" class="title">ffdjango新功能get--直播推流</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-03-03T15:21:45.000Z" itemprop="datePublished">2020-03-03</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2020/03/02/%E8%87%AA%E5%BB%BAgit%E6%9C%8D%E5%8A%A1%E5%99%A8/" class="title">自建git服务器</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-03-02T05:07:56.000Z" itemprop="datePublished">2020-03-02</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/android/">android</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/02/26/android_multiprocess_and_ipc/" class="title">Android中多进程与IPC的恩怨情仇</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-02-26T10:22:15.000Z" itemprop="datePublished">2020-02-26</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/python/">python</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/02/25/%E8%AE%B0%E5%BD%95%E4%B8%8BPython%E9%83%A8%E7%BD%B2%E7%9A%84%E5%9D%91%E7%82%B9%EF%BC%881%EF%BC%89/" class="title">记录下Python部署的坑点（1）</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-02-25T14:51:09.000Z" itemprop="datePublished">2020-02-25</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#题记"><span class="toc-number">1.</span> <span class="toc-text">题记</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#坑点一-数据库指令问题"><span class="toc-number">2.</span> <span class="toc-text">坑点一 数据库指令问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#坑点二-Debug开关问题"><span class="toc-number">3.</span> <span class="toc-text">坑点二 Debug开关问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#坑点三-静态文件支持"><span class="toc-number">4.</span> <span class="toc-text">坑点三 静态文件支持:</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#坑点四-Celery-问题："><span class="toc-number">5.</span> <span class="toc-text">坑点四 Celery 问题：</span></a></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-记录下Python部署的坑点（1）" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      记录下Python部署的坑点（1）
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2020/02/25/%E8%AE%B0%E5%BD%95%E4%B8%8BPython%E9%83%A8%E7%BD%B2%E7%9A%84%E5%9D%91%E7%82%B9%EF%BC%881%EF%BC%89/" class="article-date">
+	  <time datetime="2020-02-25T14:51:09.000Z" itemprop="datePublished">2020-02-25</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/python/">python</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/celery/" rel="tag">celery</a>, <a class="article-tag-link" href="/tags/django/" rel="tag">django</a>, <a class="article-tag-link" href="/tags/python/" rel="tag">python</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2020/02/25/%E8%AE%B0%E5%BD%95%E4%B8%8BPython%E9%83%A8%E7%BD%B2%E7%9A%84%E5%9D%91%E7%82%B9%EF%BC%881%EF%BC%89/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h3 id="题记"><a href="#题记" class="headerlink" title="题记"></a>题记</h3><blockquote>
+<p>上回说到，django作为我们的后台框架，承载着整体的业务功能。通过其完善 &amp; 强大的后台支持，我们可以在很短的时间内得到想要的一系列，不过作为一个新手，遇到坑也是难免的，本文记录萌新遇到的常见问题</p>
+</blockquote>
+<h3 id="坑点一-数据库指令问题"><a href="#坑点一-数据库指令问题" class="headerlink" title="坑点一 数据库指令问题"></a>坑点一 数据库指令问题</h3><blockquote>
+<p>第一个坑点：通过管理工具创建的数据库指令，对于PK键不会生效，也就是我们插入的自增主键是不会有这个属性的，需要到mysql后台修改。</p>
+</blockquote>
+<h3 id="坑点二-Debug开关问题"><a href="#坑点二-Debug开关问题" class="headerlink" title="坑点二 Debug开关问题"></a>坑点二 Debug开关问题</h3><blockquote>
+<p>部署到正式环境一定要<strong>关闭DEBUG</strong>，一定要关闭，虽然官方好心的提示了会造成内存泄露问题,可是新手尝尝会遇到这个问题而莫名其妙的被kill掉celery的worker。</p>
+</blockquote>
+<p>昨天跑了一个离线任务发现celery在django环境下，跑时间较长的任务会出现内存不足被系统kill掉的问题，这个点一定要记牢。</p>
+<p><img src="/images/2020/02/25/a11326f0-57dc-11ea-aacb-699ec20e0eca.png" alt="django_keng.png"></p>
+<h3 id="坑点三-静态文件支持"><a href="#坑点三-静态文件支持" class="headerlink" title="坑点三 静态文件支持:"></a>坑点三 静态文件支持:</h3><p>debug环境的话，django会自动的帮我们部署静态文件，想怎么玩就怎么玩，可是到了正式环境，我们需要在HttpService上配置好静态的规则，同时在Setting.py中指定静态目录：</p>
+<blockquote>
+<p>Setting.py</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">STATIC_URL = <span class="string">'/static/'</span></span><br><span class="line"></span><br><span class="line">MEDIA_IMAGE_DIR_PREFIX = <span class="string">"img"</span></span><br><span class="line"></span><br><span class="line">STATICFILES_DIRS = ( os.path.join(<span class="string">'static'</span>), )</span><br><span class="line"></span><br><span class="line">MEDIA_OUTPUT = os.path.join(<span class="string">'static'</span>,<span class="string">"output"</span>)</span><br><span class="line"></span><br><span class="line">LX_OUTPUT = os.path.join(<span class="string">'static'</span>,<span class="string">"lx"</span>)</span><br><span class="line"></span><br><span class="line">ALLOW_EXT = [<span class="string">".mp4"</span>,<span class="string">".flv"</span>,<span class="string">".avi"</span>]</span><br></pre></td></tr></table></figure>
+<p>Nginx Config</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="attribute">location</span> /static/ &#123;</span><br><span class="line">	<span class="attribute">alias</span> /home/www/wwwroot/ffdjango/static/; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>PS：记得执行 <strong>collectstatic</strong> 来收集下静态文件！！</p>
+<h3 id="坑点四-Celery-问题："><a href="#坑点四-Celery-问题：" class="headerlink" title="坑点四 Celery 问题："></a>坑点四 Celery 问题：</h3><p>使用 <strong>supervisord</strong> 部署Celery服务的时候，一定记得先kill掉之前的进程，否则你会看到一片密密麻麻的CeleryWorker</p>
+<p>放上我的启动脚本：</p>
+<blockquote>
+<p>celery.sh</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">sudo pkill -9 -f 'celery'</span><br><span class="line">source $1/bin/activate</span><br><span class="line">celery -A ffdjango worker -l info --concurrency=2</span><br></pre></td></tr></table></figure>
+
+
+<p>以上就是趟过的坑，先记录下，供后期查阅</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://zyw.io/2020/02/25/%E8%AE%B0%E5%BD%95%E4%B8%8BPython%E9%83%A8%E7%BD%B2%E7%9A%84%E5%9D%91%E7%82%B9%EF%BC%881%EF%BC%89/" title="记录下Python部署的坑点（1）" target="_blank" rel="external">记录下Python部署的坑点（1）</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/byecode" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/byecode" target="_blank"><span class="text-dark">Mr.喂</span><small class="ml-1x">Android &amp; Backend &amp; Fullstack Developer</small></a></h3>
+        <div>不念过去，不惧未来，低调做人，高调做事儿</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="lv-container" data-id="city" data-uid="MTAyMC80ODc2NS8yNTI1OQ">
+        <noscript> 为正常使用来必力评论功能请激活JavaScript</noscript>
+      </div>    
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2020/02/26/android_multiprocess_and_ipc/" title="Android中多进程与IPC的恩怨情仇"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2020/02/23/%E4%BB%8E2%E5%BC%80%E5%A7%8B%E6%89%93%E9%80%A0%E7%9A%84%E4%BA%91%E8%BD%AC%E7%A0%81-%E4%B8%80%E5%BC%A0%E2%80%9D%E5%81%87%E2%80%9C%E5%9B%BE%E7%89%87/" title="从2开始打造的云转码-一张”假“图片"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/byecode" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/xdart" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="/" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        &copy; 2021 zyw
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+<script defer type="text/javascript">
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+
+    if (typeof LivereTower === 'function') { return; }
+
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+
+
+
+
+
+
+
+</body>
+</html>

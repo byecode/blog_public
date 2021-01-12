@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>从2开始打造的云转码-一张”假“图片 | 不已</title>
+  <meta name="description" content="题记书接上回，我们提到了自动下载ffmpeg并且自动配置到环境变量中，ffmpeg的问题得到了完美的解决。此时又有一个问题来了，视频云意味着【烧钱】，流量，cdn，存储，都是大头。那么如何做到几乎0成本的存储视频呢？ 图床的妙用现在的互联网上，各式各样的图床应有尽有。大部分都是已经运行了很久的图床，比如 路过图床，sm.ms等，如果切片之后的ts文件能存在这里，那么该多幸福啊.. 幻想终究是幻想，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从2开始打造的云转码-一张”假“图片">
+<meta property="og:url" content="https://zyw.io/2020/02/23/%E4%BB%8E2%E5%BC%80%E5%A7%8B%E6%89%93%E9%80%A0%E7%9A%84%E4%BA%91%E8%BD%AC%E7%A0%81-%E4%B8%80%E5%BC%A0%E2%80%9D%E5%81%87%E2%80%9C%E5%9B%BE%E7%89%87/index.html">
+<meta property="og:site_name" content="不已">
+<meta property="og:description" content="题记书接上回，我们提到了自动下载ffmpeg并且自动配置到环境变量中，ffmpeg的问题得到了完美的解决。此时又有一个问题来了，视频云意味着【烧钱】，流量，cdn，存储，都是大头。那么如何做到几乎0成本的存储视频呢？ 图床的妙用现在的互联网上，各式各样的图床应有尽有。大部分都是已经运行了很久的图床，比如 路过图床，sm.ms等，如果切片之后的ts文件能存在这里，那么该多幸福啊.. 幻想终究是幻想，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://zyw.io/images/2020/02/23/9dede7b0-5653-11ea-9423-bfc3641adec7.png">
+<meta property="og:image" content="https://d47jbcq60tnr6.cloudfront.net/2020228/13361-1jm0toz.rpi8h.png">
+<meta property="og:image" content="https://zyw.io/images/2020/02/25/749493d0-57db-11ea-aacb-699ec20e0eca.png">
+<meta property="og:image" content="https://zyw.io/images/2020/02/25/daabd4d0-57db-11ea-aacb-699ec20e0eca.png">
+<meta property="article:published_time" content="2020-02-23T15:36:31.000Z">
+<meta property="article:modified_time" content="2021-01-12T13:20:50.456Z">
+<meta property="article:author" content="zyw">
+<meta property="article:tag" content="python">
+<meta property="article:tag" content="ffmpeg">
+<meta property="article:tag" content="图床">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://zyw.io/images/2020/02/23/9dede7b0-5653-11ea-9423-bfc3641adec7.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://zyw.io/2020/02/23/%E4%BB%8E2%E5%BC%80%E5%A7%8B%E6%89%93%E9%80%A0%E7%9A%84%E4%BA%91%E8%BD%AC%E7%A0%81-%E4%B8%80%E5%BC%A0%E2%80%9D%E5%81%87%E2%80%9C%E5%9B%BE%E7%89%87/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 4.2.0"><link rel="stylesheet" type="text/css" href="/assets/css/DPlayer.min.css"><script src="/assets/js/DPlayer.min.js"></script></head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/byecode" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Mr.喂</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android &amp; Backend &amp; Fullstack Developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/byecode" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/xdart" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="/" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">公告</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流~</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/android/">android</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/python/">python</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%BF%83%E6%83%85/">心情</a><span class="category-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AOP/" rel="tag">AOP</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binder/" rel="tag">Binder</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IPC/" rel="tag">IPC</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/celery/" rel="tag">celery</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/copyright/" rel="tag">copyright</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/django/" rel="tag">django</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ffdjango/" rel="tag">ffdjango</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ffmpeg/" rel="tag">ffmpeg</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gradle/" rel="tag">gradle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tramsform/" rel="tag">tramsform</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%9B%BE%E5%BA%8A/" rel="tag">图床</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BB%84%E4%BB%B6%E5%8C%96/" rel="tag">组件化</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%BD%AC%E7%A0%81/" rel="tag">转码</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/AOP/" style="font-size: 13.33px;">AOP</a> <a href="/tags/Binder/" style="font-size: 13px;">Binder</a> <a href="/tags/IPC/" style="font-size: 13px;">IPC</a> <a href="/tags/android/" style="font-size: 13.33px;">android</a> <a href="/tags/celery/" style="font-size: 13px;">celery</a> <a href="/tags/copyright/" style="font-size: 13px;">copyright</a> <a href="/tags/django/" style="font-size: 13.33px;">django</a> <a href="/tags/ffdjango/" style="font-size: 13px;">ffdjango</a> <a href="/tags/ffmpeg/" style="font-size: 13.67px;">ffmpeg</a> <a href="/tags/gradle/" style="font-size: 13px;">gradle</a> <a href="/tags/python/" style="font-size: 14px;">python</a> <a href="/tags/tramsform/" style="font-size: 13.33px;">tramsform</a> <a href="/tags/%E5%9B%BE%E5%BA%8A/" style="font-size: 13px;">图床</a> <a href="/tags/%E7%BB%84%E4%BB%B6%E5%8C%96/" style="font-size: 13.33px;">组件化</a> <a href="/tags/%E8%BD%AC%E7%A0%81/" style="font-size: 13px;">转码</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">三月 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">二月 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/%E5%BF%83%E6%83%85/">心情</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/03/24/why_support_copyright/" class="title">为什么要支持正版？</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-03-24T09:05:34.000Z" itemprop="datePublished">2020-03-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/python/">python</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/03/03/ffdjango%E6%96%B0%E5%8A%9F%E8%83%BDget-%E7%9B%B4%E6%92%AD%E6%8E%A8%E6%B5%81/" class="title">ffdjango新功能get--直播推流</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-03-03T15:21:45.000Z" itemprop="datePublished">2020-03-03</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2020/03/02/%E8%87%AA%E5%BB%BAgit%E6%9C%8D%E5%8A%A1%E5%99%A8/" class="title">自建git服务器</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-03-02T05:07:56.000Z" itemprop="datePublished">2020-03-02</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/android/">android</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/02/26/android_multiprocess_and_ipc/" class="title">Android中多进程与IPC的恩怨情仇</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-02-26T10:22:15.000Z" itemprop="datePublished">2020-02-26</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/python/">python</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/02/25/%E8%AE%B0%E5%BD%95%E4%B8%8BPython%E9%83%A8%E7%BD%B2%E7%9A%84%E5%9D%91%E7%82%B9%EF%BC%881%EF%BC%89/" class="title">记录下Python部署的坑点（1）</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-02-25T14:51:09.000Z" itemprop="datePublished">2020-02-25</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#题记"><span class="toc-number">1.</span> <span class="toc-text">题记</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#图床的妙用"><span class="toc-number">2.</span> <span class="toc-text">图床的妙用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#后台中添加："><span class="toc-number">2.1.</span> <span class="toc-text">后台中添加：</span></a></li></ol></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-从2开始打造的云转码-一张”假“图片" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      从2开始打造的云转码-一张”假“图片
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2020/02/23/%E4%BB%8E2%E5%BC%80%E5%A7%8B%E6%89%93%E9%80%A0%E7%9A%84%E4%BA%91%E8%BD%AC%E7%A0%81-%E4%B8%80%E5%BC%A0%E2%80%9D%E5%81%87%E2%80%9C%E5%9B%BE%E7%89%87/" class="article-date">
+	  <time datetime="2020-02-23T15:36:31.000Z" itemprop="datePublished">2020-02-23</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/python/">python</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/ffmpeg/" rel="tag">ffmpeg</a>, <a class="article-tag-link" href="/tags/python/" rel="tag">python</a>, <a class="article-tag-link" href="/tags/%E5%9B%BE%E5%BA%8A/" rel="tag">图床</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2020/02/23/%E4%BB%8E2%E5%BC%80%E5%A7%8B%E6%89%93%E9%80%A0%E7%9A%84%E4%BA%91%E8%BD%AC%E7%A0%81-%E4%B8%80%E5%BC%A0%E2%80%9D%E5%81%87%E2%80%9C%E5%9B%BE%E7%89%87/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h3 id="题记"><a href="#题记" class="headerlink" title="题记"></a>题记</h3><p>书接上回，我们提到了自动下载ffmpeg并且自动配置到环境变量中，ffmpeg的问题得到了完美的解决。此时又有一个问题来了，视频云意味着【烧钱】，流量，cdn，存储，都是大头。那么如何做到几乎0成本的存储视频呢？</p>
+<h3 id="图床的妙用"><a href="#图床的妙用" class="headerlink" title="图床的妙用"></a>图床的妙用</h3><p>现在的互联网上，各式各样的图床应有尽有。大部分都是已经运行了很久的图床，比如 <a href="https://imgchr.com/" target="_blank" rel="noopener">路过图床</a>，<a href="sm.sm">sm.ms</a>等，如果切片之后的ts文件能存在这里，那么该多幸福啊..</p>
+<p>幻想终究是幻想，如果我们尝试着将一个.ts文件上传到上述的图床上的时候，他会提示我们<br><img src="/images/2020/02/23/9dede7b0-5653-11ea-9423-bfc3641adec7.png" alt="fake_image_1.png"></p>
+<p>路被堵死了吗？其实并不然，经过尝试，把ts文件合并到图片中，不会影响原有的图片，并且！我们可以把这批图床利用起来了 </p>
+<p>比如这张图片：</p>
+<blockquote>
+<p>video-000000.jpg       100%[===========================&gt;]   8.20M   190KB/s    in 39s   </p>
+</blockquote>
+<p>一张jpg图片大小8.2M，成功的将ts文件混入其中，那我们尝试传到图床上呢？</p>
+<p><img src="https://d47jbcq60tnr6.cloudfront.net/2020228/13361-1jm0toz.rpi8h.png" alt="ts图片"></p>
+<blockquote>
+<p>这里我插入了一个经过修改的hls.js的库，可以支持<strong>特殊</strong>的图片切面ts文件，接下来是测试。打开控制台可以清楚的看到这些都是伪装好的图片。而其中的ts部分是可以经过修改版的js解析的。</p>
+</blockquote>
+<p><img src="/images/2020/02/25/749493d0-57db-11ea-aacb-699ec20e0eca.png" alt="fake_image_3.png"></p>
+<h4 id="后台中添加："><a href="#后台中添加：" class="headerlink" title="后台中添加："></a>后台中添加：</h4><p><img src="/images/2020/02/25/daabd4d0-57db-11ea-aacb-699ec20e0eca.png" alt="fake_image_4.png"></p>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@canary"></script>
+
+<div id="dplayer1" class="dplayer hexo-tag-dplayer-mark" style="margin-bottom: 20px;"></div><script>(function(){var player = new DPlayer({"container":document.getElementById("dplayer1"),"autoplay":true,"video":{"url":"https://api.mov.pw/media/cdn_media/10/8c7b0d745ac24cf096484ea6cc5f6491/index.m3u8","type":"hls"}});window.dplayers||(window.dplayers=[]);window.dplayers.push(player);})()</script>
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://zyw.io/2020/02/23/%E4%BB%8E2%E5%BC%80%E5%A7%8B%E6%89%93%E9%80%A0%E7%9A%84%E4%BA%91%E8%BD%AC%E7%A0%81-%E4%B8%80%E5%BC%A0%E2%80%9D%E5%81%87%E2%80%9C%E5%9B%BE%E7%89%87/" title="从2开始打造的云转码-一张”假“图片" target="_blank" rel="external">从2开始打造的云转码-一张”假“图片</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/byecode" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/byecode" target="_blank"><span class="text-dark">Mr.喂</span><small class="ml-1x">Android &amp; Backend &amp; Fullstack Developer</small></a></h3>
+        <div>不念过去，不惧未来，低调做人，高调做事儿</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="lv-container" data-id="city" data-uid="MTAyMC80ODc2NS8yNTI1OQ">
+        <noscript> 为正常使用来必力评论功能请激活JavaScript</noscript>
+      </div>    
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2020/02/25/%E8%AE%B0%E5%BD%95%E4%B8%8BPython%E9%83%A8%E7%BD%B2%E7%9A%84%E5%9D%91%E7%82%B9%EF%BC%881%EF%BC%89/" title="记录下Python部署的坑点（1）"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2020/02/23/%E4%BB%8E1%E5%BC%80%E5%A7%8B%E6%89%93%E9%80%A0%E7%9A%84%E4%BA%91%E8%BD%AC%E7%A0%81-Ffmpeg%E7%9A%84%E9%97%AE%E9%A2%98/" title="从1开始打造的云转码-Ffmpeg的问题"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/byecode" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/xdart" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="/" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        &copy; 2021 zyw
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+<script defer type="text/javascript">
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+
+    if (typeof LivereTower === 'function') { return; }
+
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+
+
+
+
+
+
+
+</body>
+</html>

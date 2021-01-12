@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Android中多进程与IPC的恩怨情仇 | 不已</title>
+  <meta name="description" content="题记 可能对大部分人来讲，Android多进程通信貌似没什么用，很少有人使用过 android:process&#x3D;”” 这个属性，不过对于一些繁重的，甚至可以成为一个单独的App般的业务的module，放在主进程，不仅会互相影响到其稳定性（想想如果这个业务是外部的，那你们需要battle多久？）  跨进程通信的一般姿势 多进程中，我们常见的姿势有哪些呢？  引子：AIDLAIDL（Android I">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android中多进程与IPC的恩怨情仇">
+<meta property="og:url" content="https://zyw.io/2020/02/26/android_multiprocess_and_ipc/index.html">
+<meta property="og:site_name" content="不已">
+<meta property="og:description" content="题记 可能对大部分人来讲，Android多进程通信貌似没什么用，很少有人使用过 android:process&#x3D;”” 这个属性，不过对于一些繁重的，甚至可以成为一个单独的App般的业务的module，放在主进程，不仅会互相影响到其稳定性（想想如果这个业务是外部的，那你们需要battle多久？）  跨进程通信的一般姿势 多进程中，我们常见的姿势有哪些呢？  引子：AIDLAIDL（Android I">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://zyw.io/images/2020/02/26/fe510a40-5885-11ea-8993-8535dac8c37a.jpg">
+<meta property="article:published_time" content="2020-02-26T10:22:15.000Z">
+<meta property="article:modified_time" content="2021-01-12T13:20:50.456Z">
+<meta property="article:author" content="zyw">
+<meta property="article:tag" content="android">
+<meta property="article:tag" content="IPC">
+<meta property="article:tag" content="Binder">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://zyw.io/images/2020/02/26/fe510a40-5885-11ea-8993-8535dac8c37a.jpg">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://zyw.io/2020/02/26/android_multiprocess_and_ipc/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/byecode" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Mr.喂</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android &amp; Backend &amp; Fullstack Developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="搜索" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="想要查找什么..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">分类</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">标签</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/byecode" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/xdart" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="/" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">公告</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流~</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/android/">android</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/python/">python</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%BF%83%E6%83%85/">心情</a><span class="category-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AOP/" rel="tag">AOP</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binder/" rel="tag">Binder</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/IPC/" rel="tag">IPC</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/celery/" rel="tag">celery</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/copyright/" rel="tag">copyright</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/django/" rel="tag">django</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ffdjango/" rel="tag">ffdjango</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ffmpeg/" rel="tag">ffmpeg</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gradle/" rel="tag">gradle</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tramsform/" rel="tag">tramsform</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%9B%BE%E5%BA%8A/" rel="tag">图床</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BB%84%E4%BB%B6%E5%8C%96/" rel="tag">组件化</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%BD%AC%E7%A0%81/" rel="tag">转码</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/AOP/" style="font-size: 13.33px;">AOP</a> <a href="/tags/Binder/" style="font-size: 13px;">Binder</a> <a href="/tags/IPC/" style="font-size: 13px;">IPC</a> <a href="/tags/android/" style="font-size: 13.33px;">android</a> <a href="/tags/celery/" style="font-size: 13px;">celery</a> <a href="/tags/copyright/" style="font-size: 13px;">copyright</a> <a href="/tags/django/" style="font-size: 13.33px;">django</a> <a href="/tags/ffdjango/" style="font-size: 13px;">ffdjango</a> <a href="/tags/ffmpeg/" style="font-size: 13.67px;">ffmpeg</a> <a href="/tags/gradle/" style="font-size: 13px;">gradle</a> <a href="/tags/python/" style="font-size: 14px;">python</a> <a href="/tags/tramsform/" style="font-size: 13.33px;">tramsform</a> <a href="/tags/%E5%9B%BE%E5%BA%8A/" style="font-size: 13px;">图床</a> <a href="/tags/%E7%BB%84%E4%BB%B6%E5%8C%96/" style="font-size: 13.33px;">组件化</a> <a href="/tags/%E8%BD%AC%E7%A0%81/" style="font-size: 13px;">转码</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">三月 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">二月 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/%E5%BF%83%E6%83%85/">心情</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/03/24/why_support_copyright/" class="title">为什么要支持正版？</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-03-24T09:05:34.000Z" itemprop="datePublished">2020-03-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/python/">python</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/03/03/ffdjango%E6%96%B0%E5%8A%9F%E8%83%BDget-%E7%9B%B4%E6%92%AD%E6%8E%A8%E6%B5%81/" class="title">ffdjango新功能get--直播推流</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-03-03T15:21:45.000Z" itemprop="datePublished">2020-03-03</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2020/03/02/%E8%87%AA%E5%BB%BAgit%E6%9C%8D%E5%8A%A1%E5%99%A8/" class="title">自建git服务器</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-03-02T05:07:56.000Z" itemprop="datePublished">2020-03-02</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/android/">android</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/02/26/android_multiprocess_and_ipc/" class="title">Android中多进程与IPC的恩怨情仇</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-02-26T10:22:15.000Z" itemprop="datePublished">2020-02-26</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/python/">python</a>
+              </p>
+              <p class="item-title">
+                <a href="/2020/02/25/%E8%AE%B0%E5%BD%95%E4%B8%8BPython%E9%83%A8%E7%BD%B2%E7%9A%84%E5%9D%91%E7%82%B9%EF%BC%881%EF%BC%89/" class="title">记录下Python部署的坑点（1）</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2020-02-25T14:51:09.000Z" itemprop="datePublished">2020-02-25</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    <nav id="toc" class="article-toc">
+      <h3 class="toc-title">文章目录</h3>
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#题记"><span class="toc-number">1.</span> <span class="toc-text">题记</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#跨进程通信的一般姿势"><span class="toc-number">2.</span> <span class="toc-text">跨进程通信的一般姿势</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#引子：AIDL"><span class="toc-number">2.1.</span> <span class="toc-text">引子：AIDL</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#后起之秀：Messenger"><span class="toc-number">3.</span> <span class="toc-text">后起之秀：Messenger</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#更秀的操作：ContentProvider"><span class="toc-number">4.</span> <span class="toc-text">更秀的操作：ContentProvider</span></a></li></ol>
+    </nav>
+  </div>
+</aside>
+
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-android_multiprocess_and_ipc" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android中多进程与IPC的恩怨情仇
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2020/02/26/android_multiprocess_and_ipc/" class="article-date">
+	  <time datetime="2020-02-26T10:22:15.000Z" itemprop="datePublished">2020-02-26</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/android/">android</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link" href="/tags/Binder/" rel="tag">Binder</a>, <a class="article-tag-link" href="/tags/IPC/" rel="tag">IPC</a>, <a class="article-tag-link" href="/tags/android/" rel="tag">android</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2020/02/26/android_multiprocess_and_ipc/#comments" class="article-comment-link">评论</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h3 id="题记"><a href="#题记" class="headerlink" title="题记"></a>题记</h3><blockquote>
+<p>可能对大部分人来讲，Android多进程通信貌似没什么用，很少有人使用过 <strong>android:process=””</strong> 这个属性，不过对于一些繁重的，甚至可以成为一个单独的App般的业务的<strong>module</strong>，放在主进程，不仅会互相影响到其稳定性（想想如果这个业务是外部的，那你们需要battle多久？）</p>
+</blockquote>
+<h3 id="跨进程通信的一般姿势"><a href="#跨进程通信的一般姿势" class="headerlink" title="跨进程通信的一般姿势"></a>跨进程通信的一般姿势</h3><blockquote>
+<p>多进程中，我们常见的姿势有哪些呢？</p>
+</blockquote>
+<h4 id="引子：AIDL"><a href="#引子：AIDL" class="headerlink" title="引子：AIDL"></a>引子：AIDL</h4><p>AIDL（Android Interface Define Language）作为最基础，做常见的远程通信姿势，常常在各类的 基础、入门、甚至是说那些收费的文章中提及，其使用姿势常常有以下的步骤：</p>
+<ul>
+<li>1,定义AIDL文件:</li>
+<li>2,通信过程</li>
+</ul>
+<p>没错，你一定很好奇，为什么我没有提到那些很多文章中都提到的 <strong>Service</strong> ？</p>
+<p>不错，虽然Servie是AIDL（或者说是AIDL生成的Binder）最常见的载体，不过，此处我们应该理解的是，真正参与通信过程的是Binder，Parcel，而不是我们所说的 <strong>“四大组件”</strong></p>
+<p>Binder通信的流程，在别的文章中都已经说的很透彻了，此时我们再拿回来，讲讲其中的重要之处：</p>
+<p><img src="/images/2020/02/26/fe510a40-5885-11ea-8993-8535dac8c37a.jpg" alt="binder_ipc_arch.jpg"></p>
+<p>大部分人见到的binder应该都是这个样子的。正如图上图，binder也确实是这个样子了。可是大部分文章中都少提及了一点，<strong>Binder也是可以通过Bundle传输的</strong><br>这就能发挥无限的想象力，比如：</p>
+<p>我们常见的操作，ActivityOne –启动–&gt; ActivityTwo, 然后two经过操作，在ActivityOne中接受结果。</p>
+<blockquote>
+<p>ActivityOne</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ActivityOne</span> <span class="keyword">extends</span> <span class="title">Activity</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(@Nullable Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line">        findViewById(R.id.test_al).setOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">                Intent intent = <span class="keyword">new</span> Intent(ActivityOne.<span class="keyword">this</span>,ActivityTwo<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">                startActivityForResult(intent,<span class="number">0</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onActivityResult</span><span class="params">(<span class="keyword">int</span> requestCode, <span class="keyword">int</span> resultCode, Intent data)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onActivityResult(requestCode, resultCode, data);</span><br><span class="line">        <span class="keyword">if</span>(resultCode == RESULT_OK)&#123;</span><br><span class="line">            <span class="keyword">switch</span> (resultCode)&#123;</span><br><span class="line">                <span class="comment">////do something</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>ActivityTwo.java</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ActivityTwo</span> <span class="keyword">extends</span> <span class="title">Activity</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(@Nullable Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        <span class="keyword">new</span> Handler().postDelayed(() -&gt; &#123;</span><br><span class="line">            Intent intent = <span class="keyword">new</span> Intent();</span><br><span class="line">            intent.putExtra(<span class="string">"status"</span>, <span class="string">"ok"</span>);</span><br><span class="line">            setResult(RESULT_OK, intent);</span><br><span class="line">        &#125;, <span class="number">2000</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这是一般的使用姿势，当然，还会有更简单的方案比如EventBus\RxBus\LiveBus<br>等事件总线。也可以干脆写个静态的Listener来接受callback。总之，千奇百怪的姿势都有。</p>
+<p>那么，你使用过下面这样的姿势吗？</p>
+<blockquote>
+<p>ActivityOne</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">IView2Result.Stub stub = <span class="keyword">new</span> IView2Result.Stub() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onResult</span><span class="params">(String data)</span> <span class="keyword">throws</span> RemoteException </span>&#123;</span><br><span class="line">        Log.e(<span class="string">"onResult"</span>, data);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">Intent intent = <span class="keyword">new</span> Intent(<span class="keyword">this</span>,ActivityTwo<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">Bundle bundle = <span class="keyword">new</span> Bundle();</span><br><span class="line">bundle.putBinder(<span class="string">"binder"</span>,stub.asBinder());</span><br><span class="line">intent.putExtra(<span class="string">"data"</span>,bundle);</span><br><span class="line">startActivity(intent);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>ActivityTwo</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">IBinder binder = getIntent().getExtras().getBinder(<span class="string">"binder"</span>);</span><br><span class="line">IView2Result iView2Result = IView2Result.Stub.asInterface(binder);</span><br><span class="line">iView2Result.onResult(<span class="string">"data"</span>);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>IView2Result.aidl</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">IView2Result</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">     <span class="function"><span class="keyword">void</span> <span class="title">onResult</span><span class="params">(String data)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>没错，这样实现的回调也是可以使用的，相对之前时间总线的来说，这样的操作对跨进程的支持会更优。</p>
+<h3 id="后起之秀：Messenger"><a href="#后起之秀：Messenger" class="headerlink" title="后起之秀：Messenger"></a>后起之秀：Messenger</h3><p>Messenger：作为一个不那么常见的IPC通信方式来说，有着以下的优点 </p>
+<ul>
+<li>不需要重复的定义Aidl</li>
+<li>只需要使用handler来操作，大大的简化了ipc的通信流程</li>
+</ul>
+<p>其通信模型如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">+---------------+       +---------------+      +---------------+</span><br><span class="line">|               |       |               |      |               |</span><br><span class="line">|               |       |               |      |   Process2    |</span><br><span class="line">|   Process1    |       |               |      |       +       |</span><br><span class="line">|       +       +------&gt;+               +-----&gt;+       |       |</span><br><span class="line">|       |       |       |               |      |       |       |</span><br><span class="line">|       |       |       |   Messenger   |      |       |       |</span><br><span class="line">|       |       |       |               |      |       |       |</span><br><span class="line">|       v       |       |               |      |       |       |</span><br><span class="line">| +-----+-----+ |       |               |      |       v       |</span><br><span class="line">| |  Handler  | &lt;-------+               +&lt;-----+ +-----+------ +</span><br><span class="line">| +-----------+ |       |               |      | |  Handler  | |</span><br><span class="line">|               |       |               |      | +------------ |</span><br><span class="line">+---------------+       +---------------+      +---------------+</span><br></pre></td></tr></table></figure>
+<p>同样的，它也带来了一些显而易见的弊端：</p>
+<ul>
+<li>需要定义大量的handlemessage操作</li>
+<li>不支持远程通信的callback</li>
+</ul>
+<p>当然，这些弊端我们也可以通过一些手段来规避，例如封装一些预置的，通用的操作来对外简化Api，可是对于分离进程常常需要的callback操作，却显得有些力不从心了。</p>
+<blockquote>
+<p>那么有没有一种更优化的方案呢？</p>
+</blockquote>
+<h3 id="更秀的操作：ContentProvider"><a href="#更秀的操作：ContentProvider" class="headerlink" title="更秀的操作：ContentProvider"></a>更秀的操作：ContentProvider</h3><p>ContentProdiver作为Android中原生的组件支持，常常以一个<strong>内容提供者</strong>出现。用来封装一些需要跨进程共享的数据来说已经足以支持复杂的场景了。不过，作为一个<strong>provider</strong>，它也可以对外提供服务。如文章一开始的描述，<strong>参与跨进程通信的，是Binder和Parcel，而非组件</strong>。而任何可以参与Bundle数据交换的地方，我们都可以使用Binder进行通信。如此一来，出现了很多基于ContentProvider的远程通信方案：</p>
+<p>常见的姿势是这样的</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">+--------------------+    +----------------------+</span><br><span class="line">|                    |    |                      |</span><br><span class="line">|                    |    |                      |</span><br><span class="line">|       Process1     |    |      Process2        |</span><br><span class="line">|                    |    |                      |</span><br><span class="line">+---+-------^--------+    +------+------^--------+</span><br><span class="line">    |       |                    |      |</span><br><span class="line">    |       |                    |      |</span><br><span class="line">    |       |                    |      |</span><br><span class="line">    |       |                    |      |</span><br><span class="line">    |       |                    |      |</span><br><span class="line">    |       |                    |      |</span><br><span class="line">+------------------------------------------------+</span><br><span class="line">|   +-----------+               +-----------+    |</span><br><span class="line">|   |   AIDL1   +--------------&gt;+ AIDL2     |    |</span><br><span class="line">|   |           |               |           |    |</span><br><span class="line">|   +-----------+&lt;--------------+-----------+    |</span><br><span class="line">|                                                |</span><br><span class="line">|                                                |</span><br><span class="line">|              ContentProvider                   |</span><br><span class="line">|                                                |</span><br><span class="line">+------------------------------------------------+</span><br></pre></td></tr></table></figure>
+
+<p>Process1 和 Process2 之间使用了ContentProvider进行远程的调用，他们之间通常在Provider进程内还有一个缓存来存放各个进程对应的服务，等需要调用的进程发起调用的时，在Provider查询此服务，然后返回对应的Binder来实现通信。</p>
+<p>其面临的弊端也是显而易见的，那就是需要反复的定义各种Aidl服务</p>
+<p>以上就是目前阶段我总结的一些基于Binder的远程通信方案。现阶段的远程通信方案，或多或少的都面临着一些问题。这些问题虽然可以通过大量的编码解决，但往往催生一个新技术发展的是消除重复的劳动。所以，在<strong>多进程与IPC的恩怨情仇</strong>第二篇中，以上的这些问题都将一一解决，同时封装一个<strong>强大的，易于维护</strong>的远程通信方案！</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://zyw.io/2020/02/26/android_multiprocess_and_ipc/" title="Android中多进程与IPC的恩怨情仇" target="_blank" rel="external">Android中多进程与IPC的恩怨情仇</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/byecode" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/byecode" target="_blank"><span class="text-dark">Mr.喂</span><small class="ml-1x">Android &amp; Backend &amp; Fullstack Developer</small></a></h3>
+        <div>不念过去，不惧未来，低调做人，高调做事儿</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="lv-container" data-id="city" data-uid="MTAyMC80ODc2NS8yNTI1OQ">
+        <noscript> 为正常使用来必力评论功能请激活JavaScript</noscript>
+      </div>    
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2020/03/02/%E8%87%AA%E5%BB%BAgit%E6%9C%8D%E5%8A%A1%E5%99%A8/" title="自建git服务器"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2020/02/25/%E8%AE%B0%E5%BD%95%E4%B8%8BPython%E9%83%A8%E7%BD%B2%E7%9A%84%E5%9D%91%E7%82%B9%EF%BC%881%EF%BC%89/" title="记录下Python部署的坑点（1）"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+    <li class="toggle-toc">
+      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
+        <span>[&nbsp;</span><span>文章目录</span>
+        <i class="text-collapsed icon icon-anchor"></i>
+        <i class="text-in icon icon-close"></i>
+        <span>]</span>
+      </a>
+    </li>
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/byecode" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/xdart" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="/" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        &copy; 2021 zyw
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+<script defer type="text/javascript">
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+
+    if (typeof LivereTower === 'function') { return; }
+
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+
+
+
+
+
+
+
+</body>
+</html>
