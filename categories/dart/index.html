@@ -17,25 +17,18 @@
   <meta http-equiv="window-target" content="_top" />
   
   
-  <title>下一代秒拍组件化构思 | 不已</title>
-  <meta name="description" content="目前阶段的秒拍工程已经有了一套成熟的组件化体系，不过仍然很多问题等待解决。 1.组件化完全依赖于工程的一些配置文件，导致没有一定经验的开发人员不能合理的把控好开闭原则。 2.当时提出的构想（组建一键切换为插件）仍然没有实现 3.繁琐的配置会容易出错。为了解决这些问题，所以将提出下一代组件化的框架。 1.基本思路 主工程到底应该依赖什么？  现阶段的主工程，都是通过gradle的dependence">
-<meta property="og:type" content="article">
-<meta property="og:title" content="下一代秒拍组件化构思">
-<meta property="og:url" content="https://zhangyanwei.com/2018/10/31/%E4%B8%8B%E4%B8%80%E4%BB%A3%E7%A7%92%E6%8B%8D%E7%BB%84%E4%BB%B6%E5%8C%96%E6%9E%84%E6%80%9D/index.html">
+  <title>分类: dart | 不已</title>
+  <meta name="description" content="不念过去，不惧未来">
+<meta property="og:type" content="website">
+<meta property="og:title" content="不已">
+<meta property="og:url" content="https://zhangyanwei.com/categories/dart/index.html">
 <meta property="og:site_name" content="不已">
-<meta property="og:description" content="目前阶段的秒拍工程已经有了一套成熟的组件化体系，不过仍然很多问题等待解决。 1.组件化完全依赖于工程的一些配置文件，导致没有一定经验的开发人员不能合理的把控好开闭原则。 2.当时提出的构想（组建一键切换为插件）仍然没有实现 3.繁琐的配置会容易出错。为了解决这些问题，所以将提出下一代组件化的框架。 1.基本思路 主工程到底应该依赖什么？  现阶段的主工程，都是通过gradle的dependence">
+<meta property="og:description" content="不念过去，不惧未来">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2018-10-31T08:47:56.000Z">
-<meta property="article:modified_time" content="2021-04-16T13:13:43.054Z">
 <meta property="article:author" content="zyw">
-<meta property="article:tag" content="android">
-<meta property="article:tag" content="AOP">
-<meta property="article:tag" content="组件化">
-<meta property="article:tag" content="tramsform">
-<meta property="article:tag" content="gradle">
 <meta name="twitter:card" content="summary">
   <!-- Canonical links -->
-  <link rel="canonical" href="https://zhangyanwei.com/2018/10/31/%E4%B8%8B%E4%B8%80%E4%BB%A3%E7%A7%92%E6%8B%8D%E7%BB%84%E4%BB%B6%E5%8C%96%E6%9E%84%E6%80%9D/index.html">
+  <link rel="canonical" href="https://zhangyanwei.com/categories/dart/index.html">
   
   
     <link rel="icon" href="/favicon.png" type="image/x-icon">
@@ -303,175 +296,57 @@
 </aside>
 
   
-  
-<aside class="sidebar sidebar-toc collapse" id="collapseToc" itemscope itemtype="http://schema.org/WPSideBar">
-  <div class="slimContent">
-    <nav id="toc" class="article-toc">
-      <h3 class="toc-title">文章目录</h3>
-      <ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-基本思路"><span class="toc-number">1.</span> <span class="toc-text">1.基本思路</span></a></li></ol>
-    </nav>
-  </div>
-</aside>
-
-<main class="main" role="main">
-  <div class="content">
-  <article id="post-下一代秒拍组件化构思" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
-    
-    <div class="article-header">
-      
-        
-  
-    <h1 class="article-title" itemprop="name">
-      下一代秒拍组件化构思
-    </h1>
-  
-
-      
-      <div class="article-meta">
-        <span class="article-date">
-    <i class="icon icon-calendar-check"></i>
-	<a href="/2018/10/31/%E4%B8%8B%E4%B8%80%E4%BB%A3%E7%A7%92%E6%8B%8D%E7%BB%84%E4%BB%B6%E5%8C%96%E6%9E%84%E6%80%9D/" class="article-date">
-	  <time datetime="2018-10-31T08:47:56.000Z" itemprop="datePublished">2018-10-31</time>
-	</a>
-</span>
-        
-  <span class="article-category">
-    <i class="icon icon-folder"></i>
-    <a class="article-category-link" href="/categories/android/">android</a>
-  </span>
-
-        
-  <span class="article-tag">
-    <i class="icon icon-tags"></i>
-	<a class="article-tag-link" href="/tags/AOP/" rel="tag">AOP</a>, <a class="article-tag-link" href="/tags/android/" rel="tag">android</a>, <a class="article-tag-link" href="/tags/gradle/" rel="tag">gradle</a>, <a class="article-tag-link" href="/tags/tramsform/" rel="tag">tramsform</a>, <a class="article-tag-link" href="/tags/%E7%BB%84%E4%BB%B6%E5%8C%96/" rel="tag">组件化</a>
-  </span>
-
-
-        
-
-        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2018/10/31/%E4%B8%8B%E4%B8%80%E4%BB%A3%E7%A7%92%E6%8B%8D%E7%BB%84%E4%BB%B6%E5%8C%96%E6%9E%84%E6%80%9D/#comments" class="article-comment-link">评论</a></span>
-        
-      </div>
+  <main class="main" role="main">
+  <article class="content article article-categories article-type-list" itemscope="">
+    <header class="article-header">
+      <h1 itemprop="name" class="hidden-xs">分类: dart</h1>
+      <p class="hidden-xs">共 1 篇文章</p>
+      <nav role="navigation" id="nav-main" class="okayNav">
+        <ul>
+          <li><a href="/categories">All</a></li>
+          
+          <li><a href="/categories/android/">android</a></li>
+          
+          <li><a href="/categories/python/">python</a></li>
+          
+          <li><a href="/categories/心情/">心情</a></li>
+          
+          <li><a href="/categories/dart/">dart</a></li>
+          
+        </ul>
+      </nav>
+    </header>
+    <!-- /header -->
+    <div class="article-body">
+      <div class="panel panel-default b-no">
+    <div class="panel-heading" role="tab">
+        <h4 class="panel-title">
+            <a data-toggle="collapse" href="#collapsedart" aria-expanded="true">
+              <i class="icon icon-folder text-active"></i><i class="icon icon-folder-open text"></i>
+              dart
+            </a>
+            <small class="text-muted">(Total 1 articles)</small>
+        </h4>
     </div>
-    <div class="article-entry marked-body" itemprop="articleBody">
-      
-        <p>目前阶段的秒拍工程已经有了一套成熟的组件化体系，不过仍然很多问题等待解决。</p>
-<pre><code>1.组件化完全依赖于工程的一些配置文件，导致没有一定经验的开发人员不能合理的把控好开闭原则。
-2.当时提出的构想（组建一键切换为插件）仍然没有实现
-3.繁琐的配置会容易出错。</code></pre><p>为了解决这些问题，所以将提出下一代组件化的框架。</p>
-<h5 id="1-基本思路"><a href="#1-基本思路" class="headerlink" title="1.基本思路"></a>1.基本思路</h5><blockquote>
-<p>主工程到底应该依赖什么？</p>
-</blockquote>
-<p>现阶段的主工程，都是通过gradle的dependence直接compile引入gradle工程内部的project，如果可以更换一种方式，比如通过 “compile远程依赖”,来引入其他工程，内部的module也都加上版本控制，这样会大大增加工程的稳定性。</p>
-<p>主工程配置如下</p>
-<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">MpAppWrapperConfig &#123;</span><br><span class="line">  localMavenDir = <span class="string">"mpLocalMaven"</span></span><br><span class="line">  <span class="keyword">exclude</span>[<span class="string">'yxplayer'</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    <div id="collapsedart" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingdart">
+        <div class="panel-body">
+            <div class="collection">
+              
+                
+<a href="/2021/04/16/%E4%B8%80%E6%96%87%E5%85%A5%E9%97%A8Dartlang/" class="collection-item" target="_blank" itemprop="url">
+  <time datetime="2021-04-16T13:13:24.000Z" itemprop="datePublished">2021-04-16</time>
+  <span>&nbsp;&nbsp;&nbsp;</span> 一文入门Dartlang
+</a>
 
-<p>其中，localMavenDir ，为指定的一个本地maven目录。通过此方法，构建一个本地的maven。然后其他工程publish到此maven目录下，可以增加编译的速度。</p>
-<blockquote>
-<p>module怎样定义最好？</p>
-</blockquote>
-<p>现在控制是否为单独编译模式存在着很大的隐患，配置文件都是通过明显的配置项在gradle.properties中配置。完全可以通过gradle plugin的方式来控制这些东西</p>
-<p>module 中的config如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">MpCompConfig &#123;</span><br><span class="line">  moduleName &#x3D; &quot;com.yixia.module.player&quot;</span><br><span class="line">  debugDir &#x3D; [&#39;src&#x2F;debug&#x2F;java&#39;]</span><br><span class="line">  debugResDir &#x3D; [&#39;src&#x2F;debug&#x2F;res&#39;]</span><br><span class="line">  launcherActivity &#x3D; &quot;com.yixia.module.player.DebugActivity&quot;</span><br><span class="line">  app &#x3D; &quot;com.yixia.module.player.PYApplication&quot;</span><br><span class="line">  localMavenDir &#x3D; &quot;mpLocalMaven&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这里的配置项比较多，依次列举。</p>
-<ul>
-<li>moduleName指定独立编译期间的包名。</li>
-<li>debugDir，独立APP模式下的目录，在Module会剔除这项。</li>
-<li>debugResDir，独立模式下的res目录。</li>
-<li>launcherActivity ，独立模式下的主Debug用Activity。</li>
-<li>app ,此工程的独立app，如编译进主工程会自动打包进入application。</li>
-<li>localMavenDir输出的maven地址。</li>
-</ul>
 
-      
+              
+            </div>
+        </div>
     </div>
-    <div class="article-footer">
-      <blockquote class="mt-2x">
-  <ul class="post-copyright list-unstyled">
-    
-    <li class="post-copyright-link hidden-xs">
-      <strong>本文链接：</strong>
-      <a href="https://zhangyanwei.com/2018/10/31/%E4%B8%8B%E4%B8%80%E4%BB%A3%E7%A7%92%E6%8B%8D%E7%BB%84%E4%BB%B6%E5%8C%96%E6%9E%84%E6%80%9D/" title="下一代秒拍组件化构思" target="_blank" rel="external">下一代秒拍组件化构思</a>
-    </li>
-    
-    <li class="post-copyright-license">
-      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
-    </li>
-  </ul>
-</blockquote>
-
-
-<div class="panel panel-default panel-badger">
-  <div class="panel-body">
-    <figure class="media">
-      <div class="media-left">
-        <a href="https://github.com/byecode" target="_blank" class="img-burn thumb-sm visible-lg">
-          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
-        </a>
-      </div>
-      <div class="media-body">
-        <h3 class="media-heading"><a href="https://github.com/byecode" target="_blank"><span class="text-dark">Mr.喂</span><small class="ml-1x">Android &amp; Backend &amp; Fullstack Developer</small></a></h3>
-        <div>不念过去，不惧未来，低调做人，高调做事儿</div>
-      </div>
-    </figure>
-  </div>
 </div>
-
-
     </div>
   </article>
-  
-    
-  <section id="comments">
-  	
-      <div id="lv-container" data-id="city" data-uid="MTAyMC80ODc2NS8yNTI1OQ">
-        <noscript> 为正常使用来必力评论功能请激活JavaScript</noscript>
-      </div>    
-    
-  </section>
-
-
-  
-</div>
-
-  <nav class="bar bar-footer clearfix" data-stick-bottom>
-  <div class="bar-inner">
-  
-  <ul class="pager pull-left">
-    
-    <li class="prev">
-      <a href="/2020/02/23/A%20simple%20Way%20to%20Avoid%20Fast-Double-Click/" title="A simple way to block Android &#39;s fast click event"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
-    </li>
-    
-    
-    <li class="next">
-      <a href="/2018/09/12/%E7%A7%92%E6%8B%8D%E7%9A%84%E7%BB%84%E4%BB%B6%E5%8C%96%E6%BC%94%E8%BF%9B/" title="秒拍的组件化演进"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
-    </li>
-    
-    
-    <li class="toggle-toc">
-      <a class="toggle-btn collapsed" data-toggle="collapse" href="#collapseToc" aria-expanded="false" title="文章目录" role="button">
-        <span>[&nbsp;</span><span>文章目录</span>
-        <i class="text-collapsed icon icon-anchor"></i>
-        <i class="text-in icon icon-close"></i>
-        <span>]</span>
-      </a>
-    </li>
-    
-  </ul>
-  
-  
-  
-  <div class="bar-right">
-    
-    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
-    
-  </div>
-  </div>
-</nav>
-  
-
-
+   
 </main>
 
   <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
@@ -529,28 +404,6 @@ window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
 
 
 
-
-
-   
-
-
-
-
-   
-    
-<script defer type="text/javascript">
-  (function(d, s) {
-    var j, e = d.getElementsByTagName(s)[0];
-
-    if (typeof LivereTower === 'function') { return; }
-
-    j = d.createElement(s);
-    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
-    j.async = true;
-
-    e.parentNode.insertBefore(j, e);
-  })(document, 'script');
-</script>
 
 
 
